@@ -81,7 +81,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>8.30</version>
+				<version>3.6.0</version>
 				<configuration>
 					<configLocation>checkstyle.xml</configLocation>
 				</configuration>

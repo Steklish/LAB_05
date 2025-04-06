@@ -1,19 +1,18 @@
-# Лабораторная №3, ПнаЯВУ  
+# Лабораторная №4, ПнаЯВУ  
 ### группа 334701 Вариант №13  
 
-### `[By Anton Kozlov] 👁‍🗨⭕️👁‍🗨`
+### `👁‍🗨^👁‍🗨 [By Anton Kozlov] 👁‍🗨^👁‍🗨`
 ---
-Полезный `GET` - запрос: получение переводов по пользователю (по user id). 
-```
- @Query("SELECT t FROM Translation t WHERE t.user.id = :userId")
-```
+ 
+Обработка 400 и 500 ошибок (+ 404)
+Добавлены глобальные обработчики исключений:
 
+`@ControllerAdvice` +` @ExceptionHandler` для кастомных ошибок.
 
-Модификация в service layer с исрпользованием аннотаций (пример):
-* `@Cacheable(value = "userTranslations", key = "#userId")`
-* `@CacheEvict(value = "userTranslations", key = "#userId")`
-* `@CachePut(value = "translations", key = "#id")`
-<p style="text-align: center; Arial, sans-serif; font-size: 36px;">
-👩🏻‍🦽👩🏻‍🦽👩🏻‍🦽💨💨💨
-</p>
+`400 Bad Request`
+`500 Internal Error`
+Реализовано через Spring AOP (`@Aspect`):
+обавлена зависимость `springdoc-openapi-starter-webmvc-ui`.
+Доступна по URL: `http://localhost:8080/swagger-ui.html`.
+
 
