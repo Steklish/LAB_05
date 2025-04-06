@@ -40,8 +40,13 @@ public class ResolveQueryService {
             // URL-decode the response text if necessary
             String decodedResponseText = java.net.URLDecoder.decode(responseText, StandardCharsets.UTF_8.toString());
             String decodedQueryText = java.net.URLDecoder.decode(queryText, StandardCharsets.UTF_8.toString());
-
-            return List.of(decodedResponseText, decodedQueryText, destLang, srcLan);
+            return List.of(
+                "translated_text: " + decodedResponseText,
+                "original_text: " + decodedQueryText,
+                "destination_language: " + destLang,
+                "source_language: " + srcLan,
+                "raw_json: " + json
+            );
         } catch (RestClientException | UnsupportedEncodingException e) {
             return List.of("error", e.toString());
         }

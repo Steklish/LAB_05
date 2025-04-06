@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.translator.translator.model.user.User;
 import com.translator.translator.service.UserService;
 
+import jakarta.validation.Valid;
+
 // User Controller
 @RestController
 @RequestMapping("/users")
@@ -29,7 +31,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         return ResponseEntity.ok(userService.createUser(user));
     }
 
@@ -44,7 +46,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    public User updateUser(@PathVariable Long id, @Valid @RequestBody User userDetails) {
         return userService.updateUser(id, userDetails);
     }
 

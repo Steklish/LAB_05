@@ -16,6 +16,8 @@ import com.translator.translator.service.AuthorizedTranslationService;
 import com.translator.translator.service.ResolveQueryService;
 import com.translator.translator.service.UserService;
 
+import jakarta.validation.Valid;
+
 
 
 // General API controller
@@ -36,8 +38,8 @@ public class GeneralController {
 
 
     @GetMapping("/unauthorized")
-    public List<String> getUnauthorizedTranslation(@RequestParam String srcLan, 
-            @RequestParam String destLang, @RequestParam String text) throws JsonMappingException, JsonProcessingException { 
+    public List<String> getUnauthorizedTranslation(@Valid @RequestParam String srcLan, 
+            @Valid @RequestParam String destLang, @Valid @RequestParam String text) throws JsonMappingException, JsonProcessingException { 
         return this.resolveQueryService.getTranslation(srcLan, destLang, text);
     }
 
@@ -48,8 +50,8 @@ public class GeneralController {
 
 
     @PostMapping
-    public List<String> authorizedTranslation(@RequestParam String srcLan, 
-            @RequestParam String destLang, @RequestParam String text, @RequestBody long userId) throws JsonProcessingException {
+    public List<String> authorizedTranslation(@Valid @RequestParam String srcLan, 
+    @Valid @RequestParam String destLang, @Valid @RequestParam String text, @RequestBody long userId) throws JsonProcessingException {
         return authorizedTranslationService.verifyTranslate(srcLan, destLang, text, userId);
     }
     

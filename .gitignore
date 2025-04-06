@@ -21,7 +21,7 @@ target/
 
 ### NetBeans ###
 /nbproject/private/
-/nbbuild/
+/nbbuild/   
 /dist/
 /nbdist/
 /.nb-gradle/
@@ -32,3 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 src/main/resources/
+logs/app.log

@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 
 public class HTTPRequestHandler {
     final String baseUrl = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=%s&tl=%s&dt=t&q=%s";
+    // final String baseUrl = "https://translate.google.com/?sl=%s&tl=%s&text=%s&op=translate";
     
     public String getRequestForTranslation(String srcLan, String destLang, String text){
         try {

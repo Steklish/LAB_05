@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.translator.translator.model.translation.Translation;
 import com.translator.translator.service.TranslationService;
 
+import jakarta.validation.Valid;
+
 // Translation Controller
 @RestController
 @RequestMapping("/translations")
@@ -31,7 +33,7 @@ public class TranslationController {
     @PostMapping("/user/{userId}")
     public ResponseEntity<Translation> createTranslation(
             @PathVariable Long userId,
-            @RequestBody Translation translation) {
+            @Valid @RequestBody Translation translation) {
         return ResponseEntity.ok(translationService.createTranslation(userId, translation));
     }
 
@@ -46,7 +48,7 @@ public class TranslationController {
     }
 
     @PutMapping("/{id}")
-    public Translation updateTranslation(@PathVariable Long id, @RequestBody Translation translationDetails) {
+    public Translation updateTranslation(@PathVariable Long id, @Valid @RequestBody Translation translationDetails) {
         return translationService.updateTranslation(id, translationDetails);
     }
 
