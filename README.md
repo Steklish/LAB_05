@@ -1,18 +1,14 @@
-# Лабораторная №4, ПнаЯВУ  
+# Лабораторная №5, ПнаЯВУ  
 ### группа 334701 Вариант №13  
 
-### `👁‍🗨^👁‍🗨 [By Anton Kozlov] 👁‍🗨^👁‍🗨`
+
+### `ಠ_ಠ [By Anton Kozlov] ಠ_ಠ`
 ---
- 
-Обработка 400 и 500 ошибок (+ 404)
-Добавлены глобальные обработчики исключений:
-
-`@ControllerAdvice` +` @ExceptionHandler` для кастомных ошибок.
-
-`400 Bad Request`
-`500 Internal Error`
-Реализовано через Spring AOP (`@Aspect`):
-обавлена зависимость `springdoc-openapi-starter-webmvc-ui`.
-Доступна по URL: `http://localhost:8080/swagger-ui.html`.
+ Сделал `PUSH` (bulk) запрос для добавления списка переводов в `DB`.
 
 
+<div style="text-align: center; margin: 0 auto; width: 80%;">
+    <p>༼ ºل͟º༼ ºل͟º༼ ºل͟º༼ ºل͟º ༽ºل͟º ༽ºل͟º ༽ºل͟º ༽</p>
+</div>
+
+---

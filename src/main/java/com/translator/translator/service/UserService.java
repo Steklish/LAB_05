@@ -1,47 +1,63 @@
 package com.translator.translator.service;
 
 import java.util.List;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+
 import org.springframework.stereotype.Service;
 
+import com.translator.translator.cache.UserCache;
 import com.translator.translator.model.user.User;
 import com.translator.translator.model.user.UserRepository;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final UserCache userCache;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, UserCache userCache) {
         this.userRepository = userRepository;
+        this.userCache = userCache;
     }
 
-    @CacheEvict(value = "allUsers", allEntries = true)
-    public User createUser(User user) { 
-        return userRepository.save(user); 
+    public User createUser(User user) {
+        User savedUser = userRepository.save(user);
+        userCache.put(savedUser);
+        return savedUser;
     }
 
-    @Cacheable(value = "allUsers")
-    public List<User> getAllUsers() { 
-        return userRepository.findAll(); 
+    public List<User> getAllUsers() {
+        return userCache.getAllUsers()
+                .orElseGet(() -> {
+                    List<User> users = userRepository.findAll();
+                    if (!users.isEmpty()) {
+                        userCache.putAllUsers(users);
+                    }
+                    return users;
+                });
     }
 
-    @Cacheable(value = "users", key = "#id")
-    public User getUserById(Long id) { 
-        return userRepository.findById(id).orElseThrow(); 
+    public User getUserById(Long id) {
+        return userCache.get(id)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(id).orElseThrow();
+                    userCache.put(user);
+                    return user;
+                });
     }
 
-    @CachePut(value = "users", key = "#id")
-    @CacheEvict(value = "allUsers", allEntries = true)
     public User updateUser(Long id, User userDetails) {
         User user = userRepository.findById(id).orElseThrow();
         user.setName(userDetails.getName());
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        
+        userCache.put(updatedUser);
+        userCache.invalidateAllUsers();
+        
+        return updatedUser;
     }
 
-    @CacheEvict(value = {"users", "allUsers"}, key = "#id")
-    public void deleteUser(Long id) { 
-        userRepository.deleteById(id); 
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+        userCache.invalidate(id);
+        userCache.invalidateAllUsers();
     }
 }

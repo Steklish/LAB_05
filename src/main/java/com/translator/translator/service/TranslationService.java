@@ -5,11 +5,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.translator.translator.cache.TranslationCache;
 import com.translator.translator.dto.request.BulkTranslationRequest;
 import com.translator.translator.model.translation.Translation;
 import com.translator.translator.model.translation.TranslationRepository;
@@ -22,48 +20,80 @@ import jakarta.validation.Valid;
 public class TranslationService {
     private final TranslationRepository translationRepository;
     private final UserService userService;
+    private final TranslationCache translationCache;
 
-    public TranslationService(TranslationRepository translationRepository, UserService userService) {
+    public TranslationService(TranslationRepository translationRepository, 
+                            UserService userService,
+                            TranslationCache translationCache) {
         this.translationRepository = translationRepository;
         this.userService = userService;
+        this.translationCache = translationCache;
     }
 
-    @CacheEvict(value = "userTranslations", key = "#userId")
     public Translation createTranslation(Long userId, Translation translation) {
         User user = userService.getUserById(userId);
         translation.setUser(user);
-        return translationRepository.save(translation);
+        Translation savedTranslation = translationRepository.save(translation);
+        
+        translationCache.put(savedTranslation);
+        translationCache.invalidateUserTranslations(userId);
+        
+        return savedTranslation;
     }
 
-    @Cacheable(value = "userTranslations", key = "#userId")
     public List<Translation> getTranslationsByUserId(Long userId) {
-        return translationRepository.findByUserId(userId);
+        return translationCache.getUserTranslations(userId)
+                .orElseGet(() -> {
+                    List<Translation> translations = translationRepository.findByUserId(userId);
+                    if (!translations.isEmpty()) {
+                        translationCache.putUserTranslations(userId, translations);
+                        translations.forEach(translationCache::put);
+                    }
+                    return translations;
+                });
     }
 
-    @Cacheable(value = "translations", key = "#id")
     public Translation getTranslationById(Long id) { 
-        return translationRepository.findById(id).orElseThrow(); 
+        return translationCache.get(id)
+                .orElseGet(() -> {
+                    Translation translation = translationRepository.findById(id).orElseThrow();
+                    translationCache.put(translation);
+                    return translation;
+                });
     }
 
-    @CachePut(value = "translations", key = "#id")
-    @CacheEvict(value = "userTranslations", allEntries = true)
     public Translation updateTranslation(Long id, Translation translationDetails) {
         Translation translation = translationRepository.findById(id).orElseThrow();
-        // Update fields
+        
         translation.setOriginalLanguage(translationDetails.getOriginalLanguage());
         translation.setTranslationLanguage(translationDetails.getTranslationLanguage());
         translation.setOriginalText(translationDetails.getOriginalText());
         translation.setTranslatedText(translationDetails.getTranslatedText());
-        return translationRepository.save(translation);
+        
+        Translation updatedTranslation = translationRepository.save(translation);
+        
+        translationCache.put(updatedTranslation);
+        if (updatedTranslation.getUser() != null) {
+            translationCache.invalidateUserTranslations(updatedTranslation.getUser().getId());
+        }
+        
+        return updatedTranslation;
     }
 
-    @CacheEvict(value = {"translations", "userTranslations"}, key = "#id")
     public void deleteTranslation(Long id) {
-        translationRepository.deleteById(id); 
+        Translation translation = translationRepository.findById(id).orElseThrow();
+        Long userId = translation.getUser() != null ? translation.getUser().getId() : null;
+        
+        translationRepository.deleteById(id);
+        
+        translationCache.invalidate(id);
+        if (userId != null) {
+            translationCache.invalidateUserTranslations(userId);
+        }
     }
+
 
     @Transactional
-    @CacheEvict(value = "userTranslations", allEntries = true)
     public List<Translation> processBulk(@Valid BulkTranslationRequest request) {
         // Validate request
         if (request == null || request.getTranslations() == null) {
@@ -110,6 +140,12 @@ public class TranslationService {
                     t.setUser(user);
                 })
                 .collect(Collectors.toList());
+        List<Translation> savedTranslations = translationRepository.saveAll(uniqueTranslations);
+
+        savedTranslations.forEach(t -> {
+            translationCache.put(t);
+            translationCache.invalidateUserTranslations(t.getUser().getId());
+        });
 
         // Batch save
         return translationRepository.saveAll(uniqueTranslations);
