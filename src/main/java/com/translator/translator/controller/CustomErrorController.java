@@ -20,14 +20,14 @@ public class CustomErrorController implements ErrorController {
             int statusCode = Integer.parseInt(status.toString());
 
             return switch (statusCode) {
-                case 404 -> ResponseEntity.status(HttpStatus.FOUND)  // ✅ Redirect Status (302)
+                case 404 -> ResponseEntity.status(HttpStatus.FOUND)
                          .header("Location", "/404.html")
                          .build();
 
                 case 400 -> ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Custom 400: 400 Bad Request");
                 case 500 -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Custom 500: Internal Server Error (custom SKLS) you have been scammed");
+                        .body("Custom 500: Internal Server Error (custom SKLS)");
                 default -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Something went wrong!");
             };

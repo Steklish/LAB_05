@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.translator.translator.dto.request.BulkTranslationRequest;
 import com.translator.translator.model.translation.Translation;
 import com.translator.translator.service.TranslationService;
 
@@ -56,5 +57,11 @@ public class TranslationController {
     public ResponseEntity<?> deleteTranslation(@PathVariable Long id) {
         translationService.deleteTranslation(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<List<Translation>> createBulk(
+        @Valid @RequestBody BulkTranslationRequest request) {
+        return ResponseEntity.ok(translationService.processBulk(request));
     }
 }
