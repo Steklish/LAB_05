@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,7 +28,12 @@ public class ResolveQueryService {
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.getForEntity(client.getRequestForTranslation(srcLan, destLang, text), String.class);
             String json = response.getBody();
-            
+
+            // Validate if the response is JSON
+            if (json == null || !json.trim().startsWith("{")) {
+                throw new JsonParseException(null, "Response is not valid JSON");
+            }
+
             JsonNode rootNode = objectMapper.readTree(json);
 
             // Accessing properties
@@ -47,7 +53,7 @@ public class ResolveQueryService {
                 "source_language: " + srcLan,
                 "raw_json: " + json
             );
-        } catch (RestClientException | UnsupportedEncodingException e) {
+        } catch (RestClientException | UnsupportedEncodingException | JsonParseException e) {
             return List.of("error", e.toString());
         }
     }
