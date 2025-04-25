@@ -3,6 +3,7 @@ package com.translator.translator.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.translator.translator.cache.UserCache;
 import com.translator.translator.model.user.User;
@@ -58,6 +59,30 @@ public class UserService {
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
         userCache.invalidate(id);
+        userCache.invalidateAllUsers();
+    }
+
+    public List<User> createUsers(List<User> users) {
+        Assert.notNull(users, "Users list cannot be null");
+        Assert.notEmpty(users, "Users list cannot be empty");
+        
+        List<User> savedUsers = userRepository.saveAll(users);
+        userCache.putAllUsers(users);
+        userCache.invalidateAllUsers();
+        return savedUsers;
+    }
+
+    public void deleteUsers(List<Long> userIds) {
+        Assert.notNull(userIds, "User IDs list cannot be null");
+        Assert.notEmpty(userIds, "User IDs list cannot be empty");
+        
+        // Delete all users in a single batch
+        userRepository.deleteAllByIdInBatch(userIds);
+        
+        // Invalidate cache for all deleted users
+        userIds.forEach(userCache::invalidate);
+        
+        // Invalidate the all-users cache
         userCache.invalidateAllUsers();
     }
 }

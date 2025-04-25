@@ -3,6 +3,7 @@ package com.translator.translator.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,5 +55,17 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/bulk")
+    public ResponseEntity<List<User>> createUsersBulk(@RequestBody List<User> users) {
+        List<User> createdUsers = userService.createUsers(users);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUsers);
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<Void> deleteUsersBulk(@RequestBody List<Long> userIds) {
+        userService.deleteUsers(userIds);
+        return ResponseEntity.noContent().build();
     }
 }
