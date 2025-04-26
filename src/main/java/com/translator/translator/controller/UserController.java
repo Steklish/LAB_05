@@ -57,7 +57,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
     
-    @PostMapping("/bulk")
+    @PostMapping("/bulk")   
     public ResponseEntity<List<User>> createUsersBulk(@RequestBody List<User> users) {
         List<User> createdUsers = userService.createUsers(users);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUsers);
