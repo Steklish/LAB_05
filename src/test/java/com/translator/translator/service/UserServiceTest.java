@@ -110,14 +110,14 @@ class UserServiceTest {
     }
 
     @Test
-    void createUsers_ShouldThrowExceptionWhenListIsNull() {
+    void createUsersListIsNull() {
         assertThrows(IllegalArgumentException.class, () -> {
             userService.createUsers(null);
         });
     }
 
     @Test
-    void createUsers_ShouldThrowExceptionWhenListIsEmpty() {
+    void createUsersListIsEmpty() {
         assertThrows(IllegalArgumentException.class, () -> {
             userService.createUsers(List.of());
         });
@@ -125,7 +125,7 @@ class UserServiceTest {
 
 
     @Test
-    void deleteUsers_ShouldDeleteAndInvalidateCache() {
+    void deleteUsersDeleteAndInvalidateCache() {
         // Given
         List<Long> userIds = Arrays.asList(1L, 2L, 3L);
         
@@ -139,14 +139,14 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUsers_ShouldThrowExceptionWhenListIsNull() {
+    void deleteUsersListIsNull() {
         assertThrows(IllegalArgumentException.class, () -> {
             userService.deleteUsers(null);
         });
     }
 
     @Test
-    void deleteUsers_ShouldThrowExceptionWhenListIsEmpty() {
+    void deleteUsersListIsEmpty() {
         assertThrows(IllegalArgumentException.class, () -> {
             userService.deleteUsers(List.of());
         });
