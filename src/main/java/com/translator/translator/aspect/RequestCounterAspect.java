@@ -1,8 +1,10 @@
 package com.translator.translator.aspect;
 
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
 import com.translator.translator.service.RequestCounter;
@@ -16,19 +18,25 @@ public class RequestCounterAspect {
         this.requestCounter = requestCounter;
     }
 
-    // Track ALL requests (even failed ones)
-    @Before("within(@org.springframework.stereotype.Controller *) || " +
-            "within(@org.springframework.web.bind.annotation.RestController *)")
+    @Pointcut("within(@org.springframework.web.bind.annotation.RestController *) || " +
+             "within(@org.springframework.stereotype.Controller *)")
+    public void controllerMethods() {}
+
+    // Counts all incoming requests
+    @Before("controllerMethods()")
     public void countAllRequests() {
         requestCounter.incrementTotal();
     }
 
-    // Track SUCCESSFUL requests (no exceptions thrown)
-    @AfterReturning(
-        pointcut = "within(@org.springframework.stereotype.Controller *) || " +
-                  "within(@org.springframework.web.bind.annotation.RestController *)"
-    )
+    // Counts successful requests (no exceptions)
+    @AfterReturning(pointcut = "controllerMethods()", returning = "result")
     public void countSuccessfulRequests(Object result) {
         requestCounter.incrementSuccessful();
+    }
+
+    // Counts failed requests (when exceptions are thrown)
+    @AfterThrowing(pointcut = "controllerMethods()", throwing = "ex")
+    public void countFailedRequests(Exception ex) {
+        requestCounter.incrementFailed();
     }
 }
