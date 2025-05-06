@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.translator.translator.cache.TranslationCache;
 import com.translator.translator.dto.request.BulkTranslationRequest;
@@ -39,6 +40,24 @@ public class TranslationService {
         translationCache.invalidateUserTranslations(userId);
         
         return savedTranslation;
+    }
+
+    @Transactional
+    public List<Translation> saveTranslations(List<Translation> translations) {
+        if (translations == null || translations.isEmpty()) {
+            return List.of(); // Return empty list if nothing to save
+        }
+        List<Translation> savedTranslations = translationRepository.saveAll(translations);
+
+        Set<Long> affectedUserIds = savedTranslations.stream()
+                .filter(t -> t.getUser() != null && t.getUser().getId() != null) // Ensure user and id exist
+                .map(t -> t.getUser().getId())
+                .collect(Collectors.toSet());
+
+        savedTranslations.forEach(translationCache::put); 
+        affectedUserIds.forEach(translationCache::invalidateUserTranslations); 
+
+        return savedTranslations;
     }
 
     public List<Translation> getTranslationsByUserId(Long userId) {
@@ -94,13 +113,11 @@ public class TranslationService {
 
 
     @Transactional
-    public List<Translation> processBulk(@Valid BulkTranslationRequest request) {
+    public List<Translation> createBulk(@Valid BulkTranslationRequest request) {
         // Validate request
         if (request == null || request.getTranslations() == null) {
             throw new IllegalArgumentException("Request cannot be null");
         }
-
-        // Extract and validate users
         Set<Long> userIds = request.getTranslations().stream()
                 .map(t -> {
                     if (t.getUser() == null || t.getUser().getId() == null) {
@@ -117,7 +134,6 @@ public class TranslationService {
                         userService::getUserById
                 ));
 
-        // Filter duplicates and validate translations
         List<Translation> uniqueTranslations = request.getTranslations().stream()
                 .filter(t -> {
                     // Basic validation
@@ -149,6 +165,21 @@ public class TranslationService {
 
         // Batch save
         return translationRepository.saveAll(uniqueTranslations);
+    }
+
+
+    public void deleteTranslationsBulk(List<Long> userIds) {
+        Assert.notNull(userIds, "Translations IDs list cannot be null");
+        Assert.notEmpty(userIds, "Translations IDs list cannot be empty");
+        
+        // Delete all users in a single batch
+        translationRepository.deleteAllByIdInBatch(userIds);
+        
+        // Invalidate cache for all deleted users
+        userIds.forEach(translationCache::invalidate);
+        
+        // Invalidate the all-users cache
+        translationCache.invalidateAll();
     }
 
 }

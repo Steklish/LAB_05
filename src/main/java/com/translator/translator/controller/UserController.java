@@ -59,13 +59,13 @@ public class UserController {
     
     @PostMapping("/bulk")   
     public ResponseEntity<List<User>> createUsersBulk(@RequestBody List<User> users) {
-        List<User> createdUsers = userService.createUsers(users);
+        List<User> createdUsers = userService.createUsersBulk(users);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUsers);
     }
 
     @DeleteMapping("/bulk")
     public ResponseEntity<Void> deleteUsersBulk(@RequestBody List<Long> userIds) {
-        userService.deleteUsers(userIds);
+        userService.deleteUsersBulk(userIds);
         return ResponseEntity.noContent().build();
     }
 }

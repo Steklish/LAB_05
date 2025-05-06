@@ -3,6 +3,7 @@ package com.translator.translator.service;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.translator.translator.dto.request.BulkTranslationItemRequest;
+import com.translator.translator.dto.response.BulkTranslationItemResponse;
 import com.translator.translator.tools.HTTPRequestHandler;
 
 @Service
@@ -57,4 +60,43 @@ public class ResolveQueryService {
             return List.of("error", e.toString());
         }
     }
+    
+
+    public List<BulkTranslationItemResponse> getBulkTranslations(List<BulkTranslationItemRequest> requests) throws JsonMappingException, JsonProcessingException {
+        // In a real application, you would ideally use a bulk translation endpoint
+        // if the external API supports it for performance.
+        // For demonstration, we'll loop and call the single translation method.
+        // This might not be efficient for large lists.
+
+        System.out.println("Resolving bulk translation for " + requests.size() + " items.");
+
+        return requests.stream()
+                .map(requestItem -> {
+                    try {
+                        List<String> translatedList = getTranslation(
+                            requestItem.getSrcLan(),
+                            requestItem.getDestLang(),
+                            requestItem.getText()
+                        );
+                        String translatedText = translatedList.isEmpty() ? "" : translatedList.get(0); // Get the first translation
+
+                        BulkTranslationItemResponse responseItem = new BulkTranslationItemResponse();
+                        responseItem.setOriginalLanguage(requestItem.getSrcLan());
+                        responseItem.setTranslatedLanguage(requestItem.getDestLang());
+                        responseItem.setOriginalText(requestItem.getText());
+                        responseItem.setTranslatedText(translatedText);
+                        responseItem.setTranslationId(null); // No ID until saved (in authorized flow)
+
+                        return responseItem;
+
+                    } catch (JsonProcessingException e) {
+                        // Handle errors for individual items if necessary,
+                        // or rethrow if a single failure should fail the whole batch
+                        // For simplicity, we'll wrap checked exceptions in unchecked for the stream
+                        throw new RuntimeException("Error translating item: " + requestItem.getText(), e);
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
 }

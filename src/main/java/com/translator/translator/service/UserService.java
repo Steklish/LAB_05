@@ -62,7 +62,7 @@ public class UserService {
         userCache.invalidateAllUsers();
     }
 
-    public List<User> createUsers(List<User> users) {
+    public List<User> createUsersBulk(List<User> users) {
         Assert.notNull(users, "Users list cannot be null");
         Assert.notEmpty(users, "Users list cannot be empty");
         
@@ -72,7 +72,7 @@ public class UserService {
         return savedUsers;
     }
 
-    public void deleteUsers(List<Long> userIds) {
+    public void deleteUsersBulk(List<Long> userIds) {
         Assert.notNull(userIds, "User IDs list cannot be null");
         Assert.notEmpty(userIds, "User IDs list cannot be empty");
         

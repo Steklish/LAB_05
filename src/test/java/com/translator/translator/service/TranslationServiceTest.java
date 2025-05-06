@@ -141,7 +141,7 @@ class TranslationServiceTest {
     }
 
     @Test
-    void testProcessBulk() {
+    void testcreateBulk() {
         // Setup test data
         Long userId1 = 1L;
         Long userId2 = 2L;
@@ -184,7 +184,7 @@ class TranslationServiceTest {
         when(translationRepository.saveAll(any(List.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Execute
-        List<Translation> result = translationService.processBulk(request);
+        List<Translation> result = translationService.createBulk(request);
 
         // Verify
         assertNotNull(result);
@@ -201,36 +201,36 @@ class TranslationServiceTest {
     }
 
     @Test
-    void testProcessBulkWithNullRequest() {
+    void testcreateBulkWithNullRequest() {
         assertThrows(IllegalArgumentException.class, () -> {
-            translationService.processBulk(null);
+            translationService.createBulk(null);
         });
     }
 
     @Test
-    void testProcessBulkWithNullTranslations() {
+    void testcreateBulkWithNullTranslations() {
         BulkTranslationRequest request = new BulkTranslationRequest();
         request.setTranslations(null);
         
         assertThrows(IllegalArgumentException.class, () -> {
-            translationService.processBulk(request);
+            translationService.createBulk(request);
         });
     }
 
     @Test
-    void testProcessBulkWithInvalidUser() {
+    void testcreateBulkWithInvalidUser() {
         BulkTranslationRequest request = new BulkTranslationRequest();
         Translation translation = new Translation();
         translation.setUser(new User()); // User with null ID
         request.setTranslations(Arrays.asList(translation));
         
         assertThrows(IllegalArgumentException.class, () -> {
-            translationService.processBulk(request);
+            translationService.createBulk(request);
         });
     }
 
     @Test
-    void testProcessBulkWithEmptyText() {
+    void testcreateBulkWithEmptyText() {
         Long userId = 1L;
         User user = new User();
         user.setId(userId);
@@ -245,7 +245,7 @@ class TranslationServiceTest {
         when(userService.getUserById(userId)).thenReturn(user);
         
         assertThrows(IllegalArgumentException.class, () -> {
-            translationService.processBulk(request);
+            translationService.createBulk(request);
         });
     }
 

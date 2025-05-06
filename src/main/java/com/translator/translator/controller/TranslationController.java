@@ -62,6 +62,13 @@ public class TranslationController {
     @PostMapping("/bulk")
     public ResponseEntity<List<Translation>> createBulk(
         @Valid @RequestBody BulkTranslationRequest request) {
-        return ResponseEntity.ok(translationService.processBulk(request));
+        return ResponseEntity.ok(translationService.createBulk(request));
     }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<Void> deleteUsersBulk(@RequestBody List<Long> translationIds) {
+        translationService.deleteTranslationsBulk(translationIds);
+        return ResponseEntity.noContent().build();
+    }
+
 }

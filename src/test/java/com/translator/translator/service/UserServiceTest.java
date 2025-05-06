@@ -97,7 +97,7 @@ class UserServiceTest {
         when(userRepository.saveAll(inputUsers)).thenReturn(savedUsers);
 
         // When
-        List<User> result = userService.createUsers(inputUsers);
+        List<User> result = userService.createUsersBulk(inputUsers);
 
         // Then
         assertEquals(2, result.size());
@@ -112,14 +112,14 @@ class UserServiceTest {
     @Test
     void createUsersListIsNull() {
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.createUsers(null);
+            userService.createUsersBulk(null);
         });
     }
 
     @Test
     void createUsersListIsEmpty() {
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.createUsers(List.of());
+            userService.createUsersBulk(List.of());
         });
     }
 
@@ -130,7 +130,7 @@ class UserServiceTest {
         List<Long> userIds = Arrays.asList(1L, 2L, 3L);
         
         // When
-        userService.deleteUsers(userIds);
+        userService.deleteUsersBulk(userIds);
         
         // Then
         verify(userRepository).deleteAllByIdInBatch(userIds);
@@ -141,14 +141,14 @@ class UserServiceTest {
     @Test
     void deleteUsersListIsNull() {
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.deleteUsers(null);
+            userService.deleteUsersBulk(null);
         });
     }
 
     @Test
     void deleteUsersListIsEmpty() {
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.deleteUsers(List.of());
+            userService.deleteUsersBulk(List.of());
         });
     }
 }
