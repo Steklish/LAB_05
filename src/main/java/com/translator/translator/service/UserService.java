@@ -1,6 +1,7 @@
 package com.translator.translator.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -84,5 +85,26 @@ public class UserService {
         
         // Invalidate the all-users cache
         userCache.invalidateAllUsers();
+    }
+
+    public boolean existsByName(String name) {
+        Assert.notNull(name, "Name cannot be null");
+        
+        
+        Optional<Boolean> fromCache = userCache.getAllUsers()
+                .map(users -> users.stream().anyMatch(user -> name.equals(user.getName())));
+        
+        if (fromCache.isPresent()) {
+            return fromCache.get();
+        }
+        
+        Optional<User> user = userRepository.findByName(name);
+        user.ifPresent(userCache::put);
+        
+        return user.isPresent();
+    }
+
+    public Optional<User> getByName(String username) {
+        return userRepository.findByName(username);
     }
 }

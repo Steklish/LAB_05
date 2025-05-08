@@ -43,8 +43,11 @@ public class AuthorizedTranslationService {
             //!tst comment
             Optional.ofNullable(userService.getUserById(id));
             List<String> result = resolveQueryService.getTranslation(srcLan, destLang, text);
+            
             Translation newTranslation = new Translation(srcLan, destLang, text, result.get(0));
             translationService.createTranslation(id, newTranslation);
+            System.out.print("translation created ");
+            System.out.print(result);
             return result;
         } catch (NoSuchElementException e) {
             return List.of("error", "NO USER FOUND");
