@@ -100,14 +100,4 @@ public class WebController {
         return "redirect:/";
     }
 
-    
-    @GetMapping("/user-created")
-    public String userCreated() {
-        return "user-created"; // user-created.html template
-    }
-    
-    @GetMapping("/dashboard")
-    public String dashboard() {
-        return "dashboard"; // dashboard.html template
-    }
 }

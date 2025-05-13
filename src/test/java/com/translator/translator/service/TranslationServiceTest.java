@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.translator.translator.cache.TranslationCache;
 import com.translator.translator.dto.request.BulkTranslationRequest;
@@ -23,6 +25,7 @@ import com.translator.translator.model.translation.Translation;
 import com.translator.translator.model.translation.TranslationRepository;
 import com.translator.translator.model.user.User;
 
+@ExtendWith(MockitoExtension.class)
 class TranslationServiceTest {
 
     @Mock
