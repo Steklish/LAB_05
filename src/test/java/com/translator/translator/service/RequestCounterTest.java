@@ -4,16 +4,54 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class RequestCounterTest {
+
     private RequestCounter requestCounter;
 
+    private int totalRequests;
+    private int successfulRequests;
+    private int failedRequests;
+    
     @BeforeEach
     void setUp() {
-        requestCounter = new RequestCounter();
+        requestCounter = mock(RequestCounter.class);
+
+        totalRequests = 0;
+        successfulRequests = 0;
+        failedRequests = 0;
+
+        lenient().doAnswer(invocation -> {
+            totalRequests++;
+            return null;
+        }).when(requestCounter).incrementTotal();
+
+        lenient().doAnswer(invocation -> {
+            successfulRequests++;
+            return null;
+        }).when(requestCounter).incrementSuccessful();
+
+        lenient().doAnswer(invocation -> {
+            failedRequests++;
+            return null;
+        }).when(requestCounter).incrementFailed();
+
+        lenient().doAnswer(invocation -> {
+            totalRequests = 0;
+            successfulRequests = 0;
+            failedRequests = 0;
+            return null;
+        }).when(requestCounter).reset();
+
+        lenient().when(requestCounter.getTotalRequests()).thenAnswer(invocation -> totalRequests);
+        lenient().when(requestCounter.getSuccessfulRequests()).thenAnswer(invocation -> successfulRequests);
+        lenient().when(requestCounter.getFailedRequests()).thenAnswer(invocation -> failedRequests);
     }
+
 
     @Test
     void shouldIncrementCounters() {

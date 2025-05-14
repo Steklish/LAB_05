@@ -48,4 +48,16 @@ public class BulkTranslationItemRequest {
         this.destLang = destLang;
         this.text = text;
     }
+
+    public String getSourceLanguage() {
+        return this.srcLan;
+    }
+
+    public String getTargetLanguage() {
+        return this.destLang;
+    }
+
+    public String getOriginalText() {
+        return this.text;
+    }
 }

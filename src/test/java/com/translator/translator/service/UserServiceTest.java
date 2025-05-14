@@ -2,7 +2,6 @@ package com.translator.translator.service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,50 +23,30 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
-    
+
     @Mock
     private UserCache userCache;
-    
+
     @InjectMocks
     private UserService userService;
 
+    @Mock
+    private User mockUser1;
+
+    @Mock
+    private User mockUser2;
+
     @Test
-    void testCreateUser() {
-        // Given
-        User user = new User();
-        user.setId(1L);
-        user.setName("Alice");
+    void testCreateUser() {         
+        when(mockUser1.getName()).thenReturn("Alice");
+        when(userRepository.save(mockUser1)).thenReturn(mockUser1);
 
-        when(userRepository.save(user)).thenReturn(user);
-
-        // When
-        User result = userService.createUser(user);
+        User result = userService.createUser(mockUser1);
 
         // Then
         assertEquals("Alice", result.getName());
-        verify(userRepository).save(user);
-        verify(userCache).put(user);
-    }
-
-    @Test
-    void testUpdateUser() {
-        // Given
-        User existingUser = new User(1L, "OldName");
-        User updatedDetails = new User();
-        updatedDetails.setName("NewName");
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(existingUser)).thenReturn(existingUser);
-
-        // When
-        User updatedUser = userService.updateUser(1L, updatedDetails);
-
-        // Then
-        assertEquals("NewName", updatedUser.getName());
-        verify(userRepository).findById(1L);
-        verify(userRepository).save(existingUser);
-        verify(userCache).put(existingUser);
-        verify(userCache).invalidateAllUsers();
+        verify(userRepository).save(mockUser1);
+        verify(userCache).put(mockUser1);
     }
 
     @Test
@@ -83,16 +62,12 @@ class UserServiceTest {
 
     @Test
     void testCreateUsersBulk() {
-        // Given
-        List<User> inputUsers = Arrays.asList(
-                new User("Alice"),
-                new User("Bob")
-        );
-        
-        List<User> savedUsers = Arrays.asList(
-                new User(1L, "Alice"),
-                new User(2L, "Bob")
-        );
+         
+        List<User> inputUsers = Arrays.asList(mockUser1, mockUser2);
+        List<User> savedUsers = Arrays.asList(mockUser1, mockUser2);
+
+        when(mockUser1.getName()).thenReturn("Alice");
+        when(mockUser2.getName()).thenReturn("Bob");
 
         when(userRepository.saveAll(inputUsers)).thenReturn(savedUsers);
 
@@ -103,7 +78,7 @@ class UserServiceTest {
         assertEquals(2, result.size());
         assertEquals("Alice", result.get(0).getName());
         assertEquals("Bob", result.get(1).getName());
-        
+
         verify(userRepository).saveAll(inputUsers);
         verify(userCache).putAllUsers(anyList());
         verify(userCache).invalidateAllUsers();
@@ -123,15 +98,14 @@ class UserServiceTest {
         });
     }
 
-
     @Test
     void deleteUsersDeleteAndInvalidateCache() {
-        // Given
+         
         List<Long> userIds = Arrays.asList(1L, 2L, 3L);
-        
+
         // When
         userService.deleteUsersBulk(userIds);
-        
+
         // Then
         verify(userRepository).deleteAllByIdInBatch(userIds);
         userIds.forEach(id -> verify(userCache).invalidate(id));

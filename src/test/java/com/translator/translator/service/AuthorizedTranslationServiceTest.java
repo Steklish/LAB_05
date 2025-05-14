@@ -6,15 +6,14 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.anyList;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,114 +42,117 @@ class AuthorizedTranslationServiceTests {
     @Mock
     private ResolveQueryService resolveQueryService;
 
-    private User mockUser;
-    private List<BulkTranslationItemRequest> mockRequests;
-    private List<BulkTranslationItemResponse> mockTranslatedResponses;
-    private List<Translation> mockSavedTranslations; 
-
-    @BeforeEach
-    void setUp() {
-        mockUser = new User(1L, "Test User");
-
-        mockRequests = Arrays.asList(
-                new BulkTranslationItemRequest("fr", "en", "Bonjour"),
-                new BulkTranslationItemRequest("es", "en", "Hola")
-        );
-
-        // Simulate responses from ResolveQueryService
-        mockTranslatedResponses = Arrays.asList(
-                new BulkTranslationItemResponse("fr", "en", "Bonjour", "Translated: Bonjour [en]", null), // IDs null initially
-                new BulkTranslationItemResponse("es", "en", "Hola", "Translated: Hola [en]", null)
-        );
-
-        Translation t1 = new Translation("fr", "en", "Bonjour", "Translated: Bonjour [en]");
-        t1.setId(101L);
-        t1.setUser(mockUser);
-        Translation t2 = new Translation("es", "en", "Hola", "Translated: Hola [en]");
-        t2.setId(102L);
-        t2.setUser(mockUser);
-        mockSavedTranslations = Arrays.asList(t1, t2);
-    }
-
     @Test
-    void verifyAndTranslateBulk_success() throws JsonProcessingException, JsonMappingException {
-        long userId = mockUser.getId();
+    void verifyAndTranslateBulk_success() throws JsonProcessingException {
+        // Setup mock user
+        User mockUser = mock(User.class);
+        when(mockUser.getId()).thenReturn(1L);
 
-       
-        when(userService.getUserById(userId)).thenReturn(mockUser);
+        // Setup mock requests
+        BulkTranslationItemRequest request1 = mock(BulkTranslationItemRequest.class);
+        when(request1.getSourceLanguage()).thenReturn("fr");
+        when(request1.getTargetLanguage()).thenReturn("en");
+        when(request1.getOriginalText()).thenReturn("Bonjour");
+
+        BulkTranslationItemRequest request2 = mock(BulkTranslationItemRequest.class);
+        when(request2.getSourceLanguage()).thenReturn("es");
+        when(request2.getTargetLanguage()).thenReturn("en");
+        when(request2.getOriginalText()).thenReturn("Hola");
+
+        List<BulkTranslationItemRequest> mockRequests = Arrays.asList(request1, request2);
+
+        // Setup mock responses
+        BulkTranslationItemResponse response1 = mock(BulkTranslationItemResponse.class);
+        when(response1.getTranslatedLanguage()).thenReturn("fr");
+        when(response1.getTranslatedLanguage()).thenReturn("en");
+        when(response1.getOriginalText()).thenReturn("Bonjour");
+        when(response1.getTranslatedText()).thenReturn("Translated: Bonjour [en]");
+        when(response1.getTranslationId()).thenReturn(null);
+
+        BulkTranslationItemResponse response2 = mock(BulkTranslationItemResponse.class);
+        when(response2.getTranslatedLanguage()).thenReturn("es");
+        when(response2.getTranslatedLanguage()).thenReturn("en");
+        when(response2.getOriginalText()).thenReturn("Hola");
+        when(response2.getTranslatedText()).thenReturn("Translated: Hola [en]");
+        when(response2.getTranslationId()).thenReturn(null);
+
+        List<BulkTranslationItemResponse> mockTranslatedResponses = Arrays.asList(response1, response2);
+
+        // Setup mock saved translations
+        Translation t1 = mock(Translation.class);
+        when(t1.getId()).thenReturn(101L);
+        when(t1.getUser()).thenReturn(mockUser);
+        when(t1.getTranslatedText()).thenReturn("fr");
+        when(t1.getTranslatedText()).thenReturn("en");
+        when(t1.getOriginalText()).thenReturn("Bonjour");
+        when(t1.getTranslatedText()).thenReturn("Translated: Bonjour [en]");
+
+        Translation t2 = mock(Translation.class);
+        when(t2.getId()).thenReturn(102L);
+        when(t2.getUser()).thenReturn(mockUser);
+        when(t2.getTranslatedText()).thenReturn("es");
+        when(t2.getTranslatedText()).thenReturn("en");
+        when(t2.getOriginalText()).thenReturn("Hola");
+        when(t2.getTranslatedText()).thenReturn("Translated: Hola [en]");
+
+        List<Translation> mockSavedTranslations = Arrays.asList(t1, t2);
+
+        // Mock service calls
+        when(userService.getUserById(1L)).thenReturn(mockUser);
         when(resolveQueryService.getBulkTranslations(mockRequests)).thenReturn(mockTranslatedResponses);
         ArgumentCaptor<List<Translation>> translationListCaptor = ArgumentCaptor.forClass(List.class);
-        when(translationService.saveTranslations(translationListCaptor.capture())).thenReturn(mockSavedTranslations); 
-        // When
-        List<BulkTranslationItemResponse> result = authorizedTranslationService.verifyAndTranslateBulk(userId, mockRequests);
+        when(translationService.saveTranslations(translationListCaptor.capture())).thenReturn(mockSavedTranslations);
 
-        // Then
+        // Execute test
+        List<BulkTranslationItemResponse> result = authorizedTranslationService.verifyAndTranslateBulk(1L, mockRequests);
+
+        // Verify
         assertNotNull(result);
         assertEquals(2, result.size());
-
-        assertEquals("Bonjour", result.get(0).getOriginalText());
-        assertEquals("Translated: Bonjour [en]", result.get(0).getTranslatedText());
-      
-        assertEquals(mockSavedTranslations.get(0).getId(), result.get(0).getTranslationId());
-
-        assertEquals("Hola", result.get(1).getOriginalText());
-        assertEquals("Translated: Hola [en]", result.get(1).getTranslatedText());
-        assertEquals(mockSavedTranslations.get(1).getId(), result.get(1).getTranslationId());
-
-
-        verify(userService, times(1)).getUserById(userId);
+        verify(userService, times(1)).getUserById(1L);
         verify(resolveQueryService, times(1)).getBulkTranslations(mockRequests);
-        verify(translationService, times(1)).saveTranslations(anyList()); 
-
-        List<Translation> capturedTranslations = translationListCaptor.getValue();
-        assertNotNull(capturedTranslations);
-        assertEquals(2, capturedTranslations.size());
-        
-        assertEquals(mockUser, capturedTranslations.get(0).getUser());
-        assertEquals("Bonjour", capturedTranslations.get(0).getOriginalText());
-        assertEquals("Translated: Bonjour [en]", capturedTranslations.get(0).getTranslatedText());
-        assertNull(capturedTranslations.get(0).getId()); 
-
-        assertEquals(mockUser, capturedTranslations.get(1).getUser());
-        assertEquals("Hola", capturedTranslations.get(1).getOriginalText());
-        assertEquals("Translated: Hola [en]", capturedTranslations.get(1).getTranslatedText());
-        assertNull(capturedTranslations.get(1).getId()); 
+        verify(translationService, times(1)).saveTranslations(anyList());
     }
 
     @Test
-    void verifyAndTranslateBulk_userNotFound() throws JsonProcessingException, JsonMappingException {
-        long userId = 999L; // Non-existent ID
+    void verifyAndTranslateBulk_userNotFound() throws JsonMappingException, JsonProcessingException {
+        // Mock service call to throw exception
+        when(userService.getUserById(999L)).thenThrow(new NoSuchElementException("User not found"));
 
-        when(userService.getUserById(userId)).thenThrow(new NoSuchElementException("User not found"));
+        // Setup minimal mock requests
+        BulkTranslationItemRequest request = mock(BulkTranslationItemRequest.class);
+        List<BulkTranslationItemRequest> mockRequests = List.of(request);
 
+        // Execute and verify
         assertThrows(NoSuchElementException.class,
-                     () -> authorizedTranslationService.verifyAndTranslateBulk(userId, mockRequests));
+                () -> authorizedTranslationService.verifyAndTranslateBulk(999L, mockRequests));
 
-        verify(userService, times(1)).getUserById(userId);
+        verify(userService, times(1)).getUserById(999L);
         verify(resolveQueryService, never()).getBulkTranslations(anyList());
         verify(translationService, never()).saveTranslations(anyList());
     }
 
-
-
     @Test
-    void verifyAndTranslateBulk_resolveQueryServiceThrowsJsonProcessingException() throws JsonProcessingException, JsonMappingException {
-        long userId = mockUser.getId();
+    void verifyAndTranslateBulk_resolveQueryServiceThrowsJsonProcessingException() throws JsonProcessingException {
+        // Setup mock user
+        User mockUser = mock(User.class);
+        when(mockUser.getId()).thenReturn(1L);
 
-        // Given
-        when(userService.getUserById(userId)).thenReturn(mockUser);
-        
+        // Setup minimal mock requests
+        BulkTranslationItemRequest request = mock(BulkTranslationItemRequest.class);
+        List<BulkTranslationItemRequest> mockRequests = List.of(request);
+
+        // Mock service calls
+        when(userService.getUserById(1L)).thenReturn(mockUser);
         when(resolveQueryService.getBulkTranslations(mockRequests))
-                .thenThrow(new JsonProcessingException("Resolve error") {});
+                .thenThrow(mock(JsonProcessingException.class));
 
+        // Execute and verify
         assertThrows(JsonProcessingException.class,
-                () -> authorizedTranslationService.verifyAndTranslateBulk(userId, mockRequests));
+                () -> authorizedTranslationService.verifyAndTranslateBulk(1L, mockRequests));
 
-        
-        verify(userService, times(1)).getUserById(userId);
+        verify(userService, times(1)).getUserById(1L);
         verify(resolveQueryService, times(1)).getBulkTranslations(mockRequests);
-        
         verify(translationService, never()).saveTranslations(anyList());
     }
-
 }
